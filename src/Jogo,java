@@ -1,0 +1,111 @@
+import java.util.Scanner;
+
+public class Jogo {
+    private Jogador jogador;
+    private Sala entrada, claustro, biblioteca, laboratorio, salaSinos, santuarioProfano, refeitorio, quartoMonges, cripta;
+
+    public void inicializarSalas() {
+        entrada = new Sala("Entrada", "Você está diante do portão enferrujado de um antigo santuário, envolto por névoa e silêncio.");
+        claustro = new Sala("Claustro", "Um pátio interno, com colunas gastas e sombras que parecem se mover.");
+        biblioteca = new Sala("Biblioteca", "Estantes altas, livros empoeirados e um cheiro de mofo. Algo se move entre as sombras.");
+        laboratorio = new Sala("Laboratório", "Frascos quebrados, instrumentos antigos e um leve cheiro de enxofre.");
+        salaSinos = new Sala("Sala dos Sinos", "Sinos silenciosos pendem do teto. O ar é pesado e opressivo.");
+        santuarioProfano = new Sala("Santuário Profano", "O coração sombrio do santuário. Uma presença maligna é quase palpável.");
+        refeitorio = new Sala("Refeitório", "Mesas viradas, restos de refeições antigas e marcas estranhas nas paredes.");
+        quartoMonges = new Sala("Quarto dos Monges", "Camas simples, pertences abandonados e um frio inexplicável.");
+        cripta = new Sala("Cripta", "Escura e úmida, cheia de túmulos antigos. Algo brilha entre as lápides.");
+
+        // Conexões
+        entrada.adicionarConexao("sul", claustro);
+
+        claustro.adicionarConexao("norte", entrada);
+        claustro.adicionarConexao("leste", biblioteca);
+        claustro.adicionarConexao("sul", refeitorio);
+
+        biblioteca.adicionarConexao("oeste", claustro);
+        biblioteca.adicionarConexao("leste", laboratorio);
+        biblioteca.adicionarConexao("sul", cripta);
+
+        laboratorio.adicionarConexao("oeste", biblioteca);
+        laboratorio.adicionarConexao("sul", salaSinos);
+
+        salaSinos.adicionarConexao("norte", laboratorio);
+        salaSinos.adicionarConexao("leste", santuarioProfano);
+
+        santuarioProfano.adicionarConexao("oeste", salaSinos);
+        santuarioProfano.adicionarConexao("sul", quartoMonges);
+
+        refeitorio.adicionarConexao("norte", claustro);
+        refeitorio.adicionarConexao("leste", quartoMonges);
+
+        quartoMonges.adicionarConexao("norte", santuarioProfano);
+        quartoMonges.adicionarConexao("oeste", refeitorio);
+        quartoMonges.adicionarConexao("leste", null); // Se houver outra conexão leste, ajuste aqui
+        
+        cripta.adicionarConexao("norte", biblioteca);
+    }
+
+    public void iniciar() {
+        inicializarSalas();
+        jogador = new Jogador(entrada);
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Bem-vindo ao Santuário Sombrio!");
+        System.out.println(jogador.getSalaAtual().getDescricao());
+        while (true) {
+            System.out.print("> ");
+            String comando = scanner.nextLine().trim().toLowerCase();
+            if (comando.equals("sair")) {
+                System.out.println("Saindo do jogo...");
+                break;
+            }
+            processarComando(comando);
+        }
+        scanner.close();
+    }
+
+    private void processarComando(String comando) {
+        if (comando.equals("norte") || comando.equals("sul") || comando.equals("leste") || comando.equals("oeste")) {
+            mover(comando);
+        } else if (comando.equals("olhar")) {
+            System.out.println(jogador.getSalaAtual().getDescricao());
+        } else if (comando.equals("inventario")) {
+            if (jogador.getInventario().isEmpty()) {
+                System.out.println("Seu inventário está vazio.");
+            } else {
+                System.out.println("Inventário:");
+                for (Item item : jogador.getInventario()) {
+                    System.out.println("- " + item.getNome() + ": " + item.getDescricao());
+                }
+            }
+        } else if (comando.equals("mapa")) {
+            if (jogador.possuiItem("Mapa Antigo")) {
+                exibirMapa();
+            } else {
+                System.out.println("Você não possui nenhum mapa.");
+            }
+        } else {
+            System.out.println("Comando desconhecido.");
+        }
+    }
+
+    private void mover(String direcao) {
+        Sala proximaSala = jogador.getSalaAtual().getConexao(direcao);
+        if (proximaSala != null) {
+            jogador.setSalaAtual(proximaSala);
+            System.out.println(proximaSala.getDescricao());
+        } else {
+            System.out.println("Não é possível ir nessa direção.");
+        }
+    }
+
+    private void exibirMapa() {
+        System.out.println("Mapa das salas visitadas:");
+        for (Sala sala : jogador.getSalasVisitadas()) {
+            System.out.println("* " + sala.getNome());
+        }
+    }
+
+    public static void main(String[] args) {
+        new Jogo().iniciar();
+    }
+}
